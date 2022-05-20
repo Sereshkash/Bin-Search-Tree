@@ -1,19 +1,25 @@
 #pragma once
 #include<iostream>
 #include<string>
+#include "complex.h"
+#include "Person.h"
+#include "Excepsion.h"
 
 template <class T>
 class Tree {
-    private:
+    protected:
         struct Node {
             T data; 
             Node* left = nullptr;
             Node* right = nullptr; 
             Node() {};
-            Node(const T& data = T()) {
+            Node(const T& data) {
                 this->data = data; 
                 this->left = nullptr;
                 this->right = nullptr;
+            }
+            void setData(const T& data) {
+                this->data = data; 
             }
         };
         Node* root;
@@ -24,18 +30,21 @@ class Tree {
         Tree(const T *array, const T &invalid, std::string variants);
         ~Tree();
         void Destroy(Node* rootActual);
-        Node* CopyTree(const Tree& tree, Node* rootActual);
+        Node* CopyTree(Node* rootActual);
         Node* CreateTree(const T* array, const T& invalid, int& index);
         Node* CreateTree(const T* array, const T& invalid, int& index, std::string variants);
         void Traversal(std::string varians, Node* rootActual, void (*operasion) (T&));
         void Traversal(std::string varians, void (*operasion) (T&));
         void Traversal(void (*operasion) (T&));
+        void Traversal(std::string varians);
         void Traversal();
+        int Size();
+        int Size(Node* rootActual);
         void Map(T (*operasion) (T));
         void Map(T (*operasion) (T), Node* rootActual);
-        bool operator ==(Tree); 
-        bool Comparison(Tree, Node*);
-	    bool operator !=(Tree); 
+        bool operator ==(Tree<T> &); 
+        bool Comparison(Node*, Node*);
+	    bool operator !=(Tree<T>); 
 
 };
 
@@ -44,7 +53,7 @@ template<class T> Tree<T>::Tree() {
 }
 
 template<class T> Tree<T>::Tree(const Tree<T> &tree) {
-    CopyTree(tree, root);
+    this->root = CopyTree(tree.root);
 }
 
 template<class T> Tree<T>::Tree(const T *array, const T &invalid) {
@@ -58,13 +67,15 @@ template<class T> Tree<T>::Tree(const T *array, const T &invalid, std::string va
 }
 
 
-template<class T> typename Tree<T>::Node *Tree<T>::CopyTree(const Tree<T> &tree, Tree<T>::Node *rootActual) {
+template<class T> typename Tree<T>::Node *Tree<T>::CopyTree(Tree<T>::Node *rootActual) {
     if(rootActual) {
         Node* node  = new Node(rootActual->data);
         node->left = CopyTree(rootActual->left);
         node->right = CopyTree(rootActual->right);
+        return node;
+    } else {
+        return nullptr;
     }
-    return rootActual;
 }
 
 template<class T> typename Tree<T>::Node *Tree<T>::CreateTree(const T *array, const T &invalid, int &index) {
@@ -80,6 +91,7 @@ template<class T> typename Tree<T>::Node *Tree<T>::CreateTree(const T *array, co
 } 
 
 template<class T> typename Tree<T>::Node *Tree<T>::CreateTree(const T *array, const T &invalid, int &index, std::string variants) {
+    Tree(array, invalid);
     Node* rootActual = nullptr;
     if(array[index] != invalid) {
         for(int i = 0; i < variants.size(); i++) {
@@ -103,7 +115,7 @@ template<class T> typename Tree<T>::Node *Tree<T>::CreateTree(const T *array, co
 }
 
 template<class T> Tree<T>::~Tree() {
-    Destroy(root);
+    Destroy(this->root);
 }
 
 template<class T> void Tree<T>::Destroy(Tree<T>::Node *rootActual) {
@@ -121,6 +133,11 @@ void PrintElem(T & item) {
 
 template<class T> void Tree<T>::Traversal() {
     Traversal("SLR", this->root, PrintElem);
+    std::cout << "\n";
+}
+
+template<class T> void Tree<T>::Traversal(std::string varians) {
+    Traversal(varians, this->root, PrintElem);
     std::cout << "\n";
 }
 
@@ -166,17 +183,33 @@ template<class T> void Tree<T>::Map(T (*operasion)(T), Node* rootActual) {
         Map(operasion, rootActual->right);
     }
 }
-/*
-template<class T> bool Tree<T>::operator==(Tree<T> tree2) {
 
+template<class T> int Tree<T>::Size() {
+    return Size(this->root);
+}
+template<class T> int Tree<T>::Size(Node* rootActual) {
+    if(!rootActual)
+        return 0;
+    return Size(rootActual->left) + Size(rootActual->right) + 1;
 }
 
-template<class T> bool Tree<T>::Comparison(Tree<T> tree2, Node* rootActual) {
-    if (rootActual) {
-        Comparison(operasion, rootActual->left);
-        rootActual->data = operasion(rootActual->data);
-        Comparison(operasion, rootActual->right);
+template<class T> bool Tree<T>::operator==(Tree<T> & tree2) {
+    return Comparison(this->root, tree2.root);
+}
+
+template<class T> bool Tree<T>::operator!=(Tree<T> tree2) {
+    return (!Comparison(this->root, tree2.root));
+}
+
+template<class T> bool Tree<T>::Comparison(Node* rootActualTh, Node* rootActual) {
+    if ((rootActualTh == nullptr) && (rootActual == nullptr)) {
+        return true;
+    } else if ((!rootActualTh) && (rootActual)) {
+        return false;
+    } else if ((rootActualTh) && (!rootActual)) {
+        return false;
+    } else if (rootActualTh->data != rootActual->data) {
+        return false;
     }
-    
+    return (Comparison(rootActualTh->left, rootActual->left)) && (Comparison(rootActualTh->right, rootActual->right));
 }
-*/
