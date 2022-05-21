@@ -17,6 +17,7 @@ class SearchTree : public Tree<T> {
     bool operator ==(SearchTree<T> &); 
     bool operator !=(SearchTree<T> &); 
     SearchTree<T>* ExtractSubtree(T item);
+    void BalanceTree();
     Node<T>* FindItem(T item);
     bool FindItemBool(T item);
     bool FindTreeBool(SearchTree& tree);
@@ -30,6 +31,16 @@ class SearchTree : public Tree<T> {
     Node<T>* SetHeightInvers(int height, Node<T>* rootActual);
     int MaxHeight(Node<T>* rootActual);
     Node<T>* SetHeight(int heightMax, Node<T>* rootActual);
+    int Height(Node<T>* rootActual);
+    int BalanceFactor(Node<T>* rootActual);
+    void FixHeight(Node<T>* rootActual);
+    Node<T>* RotationRight(Node<T>* p);
+    Node<T>* RotationLeft(Node<T>* q);
+    Node<T>* Balance(Node<T>* p);
+    bool TestingBalance();
+    bool TestingBalance(Node<T>* rootActual);
+    void Where(bool (*operasion) (T));
+    void Merger(SearchTree& tree);
 };
 
 template<class T> SearchTree<T>::SearchTree() {
@@ -60,7 +71,6 @@ template<class T> void SearchTree<T>::AddNode(T item) {
 
 template<class T> Node<T> *SearchTree<T>::AddNode(T item, Node<T> *rootActual) {
     if (!rootActual) {
-        delete rootActual;
         rootActual = new Node<T>(item);
     } else  if (item == rootActual->data) {
         throw ExceptionError(2);
@@ -69,7 +79,7 @@ template<class T> Node<T> *SearchTree<T>::AddNode(T item, Node<T> *rootActual) {
     } else {
         rootActual->right = AddNode(item, rootActual->right);
     }
-    return rootActual;
+    return Balance(rootActual);
 }
 
 template<class T> bool SearchTree<T>::operator==(SearchTree<T> & tree2) {
@@ -216,6 +226,119 @@ template<class T> Node<T> *SearchTree<T>::SetHeight(int heightMax, Node<T> *root
         rootActual->right = SetHeight(heightMax, rootActual->right);
     }
     return rootActual;
+}
+
+template<class T> int SearchTree<T>::Height(Node<T> *rootActual) {
+    return rootActual ? rootActual->height : 0;
+}
+
+template<class T> int SearchTree<T>::BalanceFactor(Node<T> *rootActual) {
+	return Height(rootActual->right)- Height(rootActual->left);
+}
+
+template<class T> void SearchTree<T>::FixHeight(Node<T> *rootActual) {
+	int hl = Height(rootActual->left);
+	int hr = Height(rootActual->right);
+	rootActual->height = ((hl > hr) ? hl : hr) + 1;
+}
+
+template<class T> Node<T> *SearchTree<T>::RotationRight(Node<T> *p) {
+	Node<T>* q = p->left;
+	p->left = q->right;
+	q->right = p;
+	FixHeight(p);
+	FixHeight(q);
+	return q;
+}
+
+template<class T> Node<T> *SearchTree<T>::RotationLeft(Node<T> *q) {
+	Node<T>* p = q->right;
+	q->right = p->left;
+	p->left = q;
+	FixHeight(q);
+	FixHeight(p);
+	return p;
+}
+
+template<class T> Node<T> *SearchTree<T>::Balance(Node<T> *p) {
+	FixHeight(p);
+	if (BalanceFactor(p) == 2) {
+		if(BalanceFactor(p->right) < 0)
+			p->right = RotationRight(p->right);
+		return RotationLeft(p);
+	}
+	if (BalanceFactor(p) == -2) {
+		if(BalanceFactor(p->left) > 0 )
+			p->left = RotationLeft(p->left);
+		return RotationRight(p);
+	}
+	return p;
+}
+
+template<class T> void SearchTree<T>::BalanceTree() {
+    T invalid = -999999;
+    T* array = Tree<T>::GetStr("LSR", invalid);
+    int j = 0;
+    Tree<T>::Destroy(this->root);
+    this->root = nullptr;
+    while (array[j]) {
+        if (array[j] != invalid) {
+           this->AddNode(array[j]);
+        }
+        j++;
+    }
+    delete [] array;
+}
+
+template<class T> bool SearchTree<T>::TestingBalance() {
+    return TestingBalance(this->root);
+}
+
+template<class T> bool SearchTree<T>::TestingBalance(Node<T> *rootActual) {
+    if (rootActual) {
+        if ((BalanceFactor(rootActual) > 1) || (BalanceFactor(rootActual) < -1)) {
+        return false;
+        }
+        bool testLeft = true;
+        bool testRight = true;
+        if (rootActual->left) {
+            testLeft = TestingBalance(rootActual->left);
+        }
+        if (rootActual->right) {
+            testRight = TestingBalance(rootActual->right);
+        }
+        return testLeft && testRight;
+    } else {
+        return true;
+    }
+}
+
+template<class T> void SearchTree<T>::Where(bool (*operasion)(T)) {
+    T invalid = -999999;
+    T* array = Tree<T>::GetStr("LSR", invalid); 
+    int j = 0;
+    Tree<T>::Destroy(this->root);
+    this->root = nullptr;
+    while (array[j]) {
+        if ((array[j] != invalid) && operasion(array[j]) == true) {
+           this->AddNode(array[j]);
+        }
+        j++;
+    }
+    delete [] array;
+}
+
+template<class T> void SearchTree<T>::Merger(SearchTree<T> &tree) {
+    T invalid = -999999;
+    T* array = tree.GetStr("LSR", invalid);
+    int j = 0;
+    while (array[j]) {
+        if ((array[j] != invalid) && (this->FindItemBool(array[j]) == false)) {
+           this->AddNode(array[j]);
+        }
+        j++;
+    }
+    delete [] array;
 }
 /*
 struct tnode * addnode(int item, tnode *tree) {
