@@ -10,7 +10,7 @@ template <class T>
     T data; 
     Node* left = nullptr;
     Node* right = nullptr;
-    int height = -1;
+    int height = 0;
     Node() {};
     Node(const T& data) {
         this->data = data; 
@@ -44,6 +44,8 @@ class Tree {
         void Traversal(void (*operasion) (T&));
         void Traversal(std::string varians);
         void Traversal();
+        T* GetStr(std::string varians, const T& invalid);
+        T* GetStr(std::string varians, Node<T> *rootActual, T* array, const T& invalid, int& index);
         int Size();
         int Size(Node<T>* rootActual);
         void Map(T (*operasion) (T));
@@ -95,7 +97,7 @@ template<class T> Node<T> *Tree<T>::CreateTree(const T *array, const T &invalid,
     }
     return rootActual;
 } 
-
+/*
 template<class T> Node<T> *Tree<T>::CreateTree(const T *array, const T &invalid, int &index, std::string variants) {
     Tree(array, invalid);
     Node<T>* rootActual = nullptr;
@@ -117,6 +119,34 @@ template<class T> Node<T> *Tree<T>::CreateTree(const T *array, const T &invalid,
                 break;
             }
         }
+    }
+}
+
+*/
+template<class T> Node<T> *Tree<T>::CreateTree(const T *array, const T &invalid, int &index, std::string variants) {
+    Tree(array, invalid);
+    if (variants == "SLR") {
+        Node<T>* rootActual = nullptr;
+        if(array[index] != invalid) {
+            rootActual = new Node<T>(array[index]);
+            index++;
+            rootActual->left = CreateTree(array, invalid, index);
+            index++;
+            rootActual->right = CreateTree(array, invalid, index);
+        }
+        return rootActual;
+    } else if (variants == "SRL") {
+        Node<T>* rootActual = nullptr;
+        if(array[index] != invalid) {
+            rootActual = new Node<T>(array[index]);
+            index++;
+            rootActual->right = CreateTree(array, invalid, index);
+            index++;
+            rootActual->left = CreateTree(array, invalid, index);
+        }
+        return rootActual;
+    }else {
+        throw ExceptionError(2);
     }
 }
 
@@ -159,6 +189,9 @@ template<class T> void Tree<T>::Traversal(std::string varians, void (*operasion)
 
 
 template<class T> void Tree<T>::Traversal(std::string varians, Node<T> *rootActual, void (*operasion)(T &)) {
+    if (varians != "LSR" && varians != "LRS" && varians != "SLR" && varians != "SRL" && varians != "RLS" && varians != "RSL") {
+        throw ExceptionError(2);
+    }
     if (rootActual) {
         for(int i = 0; i < varians.size(); i++) {
             switch (varians[i]) {
@@ -176,6 +209,42 @@ template<class T> void Tree<T>::Traversal(std::string varians, Node<T> *rootActu
             }
         }
     }
+}
+
+template<class T> T *Tree<T>::GetStr(std::string varians, const T& invalid) {
+    if (varians != "LSR" && varians != "LRS" && varians != "SLR" && varians != "SRL" && varians != "RLS" && varians != "RSL") {
+        throw ExceptionError(2);
+    }
+    int n = 3 * Size();
+    T* array = new T[n]();
+    int i = 0;
+    array = GetStr(varians, this->root, array, invalid, i);
+    return array;
+}
+
+template<class T> T *Tree<T>::GetStr(std::string varians, Node<T> *rootActual, T* array, const T& invalid, int& index) {
+    if (rootActual) {
+        for(int i = 0; i < varians.size(); i++) {
+            switch (varians[i]) {
+            case 'S':
+                array[index] = rootActual->data;
+                index++;
+                break;
+            case 'L':
+                array = GetStr(varians, rootActual->left, array, invalid, index);
+                break;
+            case 'R': 
+                array = GetStr(varians, rootActual->right, array, invalid, index);
+                break;
+            default:
+                break;
+            }
+        }
+    } else {
+        array[index] = invalid;
+        index++;
+    }
+    return array;
 }
 
 template<class T> void Tree<T>::Map(T (*operasion)(T)) {
