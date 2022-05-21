@@ -13,7 +13,7 @@ public:
             std::cout << "IndexOutOfRange\n";
             break;
         case 2:
-            std::cout << "DifferentLengthsOfVectors\n";
+            std::cout << "InvalidValue\n";
             break;
         default:
             break;
